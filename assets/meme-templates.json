@@ -1,0 +1,47 @@
+{
+  "boyfriend": {
+    "name": "Distracted Boyfriend",
+    "url": "https://i.imgflip.com/1ur9b0.jpg",
+    "size": [1200, 800],
+    "boxes": [
+      {"box": [160, 470, 520, 640], "size": 64, "style": "label"},
+      {"box": [580, 390, 900, 520], "size": 60, "style": "label"},
+      {"box": [900, 430, 1190, 640], "size": 46, "style": "label"}
+    ],
+    "texts": ["the new shiny thing", "us", "the thing we should be doing"]
+  },
+  "gru": {
+    "name": "Gru's Plan",
+    "url": "https://i.imgflip.com/26jxvz.jpg",
+    "size": [700, 449],
+    "boxes": [
+      {"box": [216, 56, 328, 206], "size": 24, "style": "board"},
+      {"box": [568, 56, 678, 206], "size": 24, "style": "board"},
+      {"box": [216, 282, 330, 432], "size": 24, "style": "board"},
+      {"box": [568, 282, 678, 432], "size": 24, "style": "board"}
+    ],
+    "texts": ["step 1", "step 2", "the flaw", "the flaw again"]
+  },
+  "brain": {
+    "name": "Expanding Brain",
+    "url": "https://i.imgflip.com/1jwhww.jpg",
+    "size": [857, 1202],
+    "boxes": [
+      {"box": [20, 20, 405, 280], "size": 52, "style": "board"},
+      {"box": [20, 320, 405, 585], "size": 52, "style": "board"},
+      {"box": [20, 620, 405, 870], "size": 52, "style": "board"},
+      {"box": [20, 905, 405, 1185], "size": 52, "style": "board"}
+    ],
+    "texts": ["normal", "smarter", "galaxy", "us"]
+  },
+  "drake": {
+    "name": "Drake Hotline Bling",
+    "url": "https://i.imgflip.com/30b1gx.jpg",
+    "size": [1200, 1200],
+    "boxes": [
+      {"box": [630, 40, 1170, 560], "size": 72, "style": "board"},
+      {"box": [630, 640, 1170, 1160], "size": 72, "style": "board"}
+    ],
+    "texts": ["what everyone does", "what we do"]
+  }
+}

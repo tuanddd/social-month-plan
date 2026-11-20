@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Content Calendar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  :root {
+    --bg: #e8e7e2; --panel: #f6f5f2; --ink: #1b1a17; --mute: #605d55; --line: #d3d1c9; --accent: #f2c230; --sub: #2f6fd6; --around: #6b4fc4; --warn: #d2552f; --ok: #1f9a6b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #161512; --panel: #1f1d19; --ink: #ece8de; --mute: #a39d90; --line: #34312a; --sub: #6c9cf0; --around: #a08cf0; --warn: #f07a52; --ok: #4cc795; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #161512; --panel: #1f1d19; --ink: #ece8de; --mute: #a39d90; --line: #34312a; --sub: #6c9cf0; --around: #a08cf0; --warn: #f07a52; --ok: #4cc795; color-scheme: dark; }
+  .split { display: flex; height: 34px; border-radius: 9px; overflow: hidden; border: 1px solid var(--line); margin: 6px 0 4px; font-size: 13px; font-weight: 650; }
+  .split div { display: flex; align-items: center; padding: 0 12px; color: #fff; white-space: nowrap; }
+  .tag { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 4px; padding: 1px 5px; border: 1px solid currentColor; }
+  .day.dual { padding: 0; gap: 0; border-top: 5px solid var(--c); }
+  .day.dual > button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 10px; }
+  .day.dual > button + button { border-top: 1px dashed var(--line); border-radius: 0 0 10px 10px; }
+  .day.dual > button:focus-visible { outline: 3px solid var(--accent); }
+  .day .also { margin-top: 6px; border-top: 1px dashed var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .hold { font-size: 12px; color: var(--warn); font-weight: 600; }
+  .trendrow td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tw { overflow-x: auto; }
+  .steps { margin: 0; padding-left: 20px; }
+  .steps li { margin: 4px 0; color: var(--mute); }
+  .steps code { font-size: 12.5px; }
+  .spares { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding-block: 32px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header.top { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; border-bottom: 2px solid var(--ink); padding-bottom: 20px; }
+  .kicker { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); font-weight: 600; }
+  h1 { font-size: 40px; line-height: 1.05; margin: 6px 0 8px; letter-spacing: -.02em; }
+  h1 span { background: var(--accent); color: #1d1b17; padding: 0 8px; border-radius: 6px; }
+  .sub { color: var(--mute); max-width: 720px; margin: 0; }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; min-width: 92px; }
+  .stat b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .stat small { color: var(--mute); font-size: 12px; }
+  .start { margin: 22px 0 8px; background: var(--ink); color: var(--bg); min-width: 0; border-radius: 12px; padding: 14px 18px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .start b { color: var(--accent); }
+  .start button { margin-left: auto; }
+  nav.toc { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 6px; }
+  nav.toc a { text-decoration: none; font-size: 13px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+  section { margin-top: 44px; }
+  h2 { font-size: 24px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .skill { font-size: 12px; color: var(--mute); margin: 0 0 16px; }
+  .skill code { background: var(--panel); border: 1px solid var(--line); padding: 1px 6px; border-radius: 5px; font-size: 11.5px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; margin-bottom: 14px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .week { margin-bottom: 20px; }
+  .week h3 { font-size: 14px; margin: 0 0 8px; display: flex; gap: 10px; align-items: baseline; }
+  .week h3 em { font-style: normal; color: var(--mute); font-weight: 500; }
+  .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+  .day { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-height: 120px; display: flex; flex-direction: column; gap: 6px; text-align: left; font: inherit; color: inherit; }
+  button.day { cursor: pointer; border-top: 5px solid var(--c); transition: transform .15s ease, box-shadow .15s ease; }
+  button.day:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+  button.day:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .day .d { font-size: 12px; color: var(--mute); font-weight: 600; display: flex; justify-content: space-between; }
+  .day .t { font-weight: 650; font-size: 14px; line-height: 1.25; }
+  .day .p { font-size: 11px; font-weight: 700; color: var(--c); text-transform: uppercase; letter-spacing: .06em; }
+  .thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 7px; background: #161512; display: block; margin-top: 4px; image-rendering: pixelated; }
+  .thumb.v { object-position: center 42%; }
+  .empty { color: var(--mute); }
+  .chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .chip { font-size: 10.5px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; color: var(--mute); }
+  .day.flex { border-style: dashed; background: transparent; }
+  .day.off { background: transparent; opacity: .75; }
+  .day.none { background: transparent; border-color: transparent; }
+  .day.flex .t, .day.off .t { font-weight: 500; font-size: 12.5px; color: var(--mute); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--mute); }
+  tr:last-child td { border-bottom: 0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .card h4 { margin: 0 0 6px; font-size: 15px; }
+  .card p, .card li { color: var(--mute); margin: 0; font-size: 14px; }
+  .card ul { padding-left: 18px; margin: 0; }
+  .quote { font-size: 18px; line-height: 1.45; background: var(--panel); border-left: 5px solid var(--accent); padding: 14px 18px; border-radius: 8px; margin: 0 0 14px; }
+  .open { border-left: 5px solid var(--warn); }
+  dialog { width: min(1100px, 96vw); max-height: 92vh; border: 0; border-radius: 16px; padding: 0; background: var(--bg); color: var(--ink); box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+  dialog::backdrop { background: rgba(10,9,7,.6); }
+  .dh { position: sticky; top: 0; background: var(--bg); padding: 18px 22px 12px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: start; z-index: 2; }
+  .dh h3 { margin: 2px 0 4px; font-size: 22px; }
+  .dh .meta { font-size: 13px; color: var(--mute); }
+  .x { margin-left: auto; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer; font: inherit; }
+  .db { padding: 18px 22px 26px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 22px; }
+  .media { display: flex; flex-direction: column; gap: 12px; }
+  .media figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+  .media img, .media video { width: 100%; display: block; border-radius: 6px; image-rendering: pixelated; background: #000; }
+  .media video.vert { max-height: 70vh; width: auto; max-width: 100%; margin: 0 auto; }
+  .media figcaption { font-size: 12px; color: var(--mute); padding: 6px 2px 0; display: flex; justify-content: space-between; }
+  .media figcaption a { color: var(--mute); }
+  .hk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .hk h5, .cp h5 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--mute); }
+  .hk ol { margin: 0; padding-left: 20px; }
+  .hk li { margin: 3px 0; font-size: 14px; }
+  .hk li.pick { font-weight: 650; }
+  .hk li.pick::marker { content: "★ "; color: var(--accent); }
+  .hk .why { font-size: 13px; color: var(--mute); margin-top: 6px; }
+  .cp { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .cp header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .cp header h5 { margin: 0; }
+  .cp .n { font-size: 11.5px; color: var(--mute); font-variant-numeric: tabular-nums; margin-left: auto; }
+  .cp pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; font: 14px/1.5 inherit; font-family: inherit; }
+  .cp .post { border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 8px; }
+  .cp .post:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+  .cp .post .n2 { font-size: 11px; color: var(--mute); }
+  .copy { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 6px; padding: 3px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+  .copy.ok { background: var(--ok); color: #fff; border-color: transparent; }
+  button { font: inherit; }
+  .btn { border: 0; background: var(--accent); color: #1d1b17; border-radius: 8px; padding: 8px 14px; font-weight: 650; cursor: pointer; }
+  .files code { font-size: 12.5px; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .day.off, .day.flex { min-height: 0; } .db { grid-template-columns: 1fr; } header.top { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 30px; } }
+  @media (prefers-reduced-motion: reduce) { button.day { transition: none; } }
+</style>
+<style id="pillarColors"></style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="kicker" id="kicker"></div>
+      <h1 id="headline"></h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="start" id="start"></div>
+
+  <nav class="toc" id="toc"></nav>
+
+  <section id="calendar">
+    <h2>Calendar</h2>
+    <p class="skill" id="calNote"></p>
+    <div class="split" id="split"></div>
+    <div class="legend" id="legend"></div>
+    <div id="weeks"></div>
+  </section>
+
+  <section id="strategy">
+    <h2>Strategy</h2>
+    <p class="skill">From <code>social-media-context-sms</code> and <code>content-strategy-sms</code>.</p>
+    <p class="quote" id="quote"></p>
+    <table id="pillars"><thead><tr><th>Pillar</th><th>Side</th><th>Share</th><th>Angle</th><th>Formats</th></tr></thead><tbody></tbody></table>
+    <div class="cards" style="margin-top:14px" id="strategyCards"></div>
+  </section>
+
+  <section id="platforms">
+    <h2>Platforms</h2>
+    <p class="skill">From <code>platform-strategy-sms</code> and <code>content-repurposer-sms</code>.</p>
+    <table><thead><tr><th>Platform</th><th>Role</th><th>Why</th><th>Cadence</th></tr></thead><tbody id="platformRows"></tbody></table>
+    <p class="skill" style="margin-top:10px" id="platformNote"></p>
+  </section>
+
+  <section id="trends">
+    <h2>Catching trends</h2>
+    <p class="skill" id="trendIntro"></p>
+    <div class="tw"><table><thead><tr><th>Date</th><th>Event</th><th>Status</th><th>Used for</th></tr></thead><tbody id="trendRows"></tbody></table></div>
+    <div class="cards" style="margin-top:14px" id="trendCards"></div>
+  </section>
+
+  <section id="spares">
+    <h2>Spares</h2>
+    <p class="skill">Finished pieces with no date. Drop one into any flexible slot.</p>
+    <div class="spares" id="spareList"></div>
+  </section>
+
+  <section id="batching">
+    <h2>Batching &amp; review</h2>
+    <p class="skill">From <code>content-calendar-sms</code>.</p>
+    <div class="cards" id="batchCards"></div>
+  </section>
+
+  <section id="decisions">
+    <h2>Open decisions</h2>
+    <p class="skill">Things only you can set.</p>
+    <div class="cards" id="decisionCards"></div>
+  </section>
+
+  <section id="made">
+    <h2>How it was made</h2>
+    <div class="cards files" id="madeCards"></div>
+  </section>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"><div class="dh"><div><div class="meta" id="dlgMeta"></div><h3 id="dlgTitle"></h3><div class="chips" id="dlgChips"></div></div><button class="x" onclick="dlg.close()" aria-label="Close">Close</button></div><div class="db"><div class="media" id="dlgMedia"></div><div id="dlgText"></div></div></dialog>
+
+<script src="calendar.js"></script>
+<script>
+  const C = window.CAL;
+  const G = C.page || {};
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const SIDES = Object.assign({ subject: 'The subject', around: 'Stories around it' }, C.sides || {});
+  const P = Object.fromEntries(C.pillars.map(p => [p.id, p]));
+  const pv = id => `var(--p-${id})`;
+  $('pillarColors').textContent = `:root{${C.pillars.map(p => `--p-${p.id}:${p.color || '#888'};`).join('')}${G.accent ? `--accent:${G.accent};` : ''}} @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${C.pillars.map(p => `--p-${p.id}:${p.dark || p.color || '#aaa'};`).join('')}}} :root[data-theme="dark"]{${C.pillars.map(p => `--p-${p.id}:${p.dark || p.color || '#aaa'};`).join('')}}`;
+  if (G.title) document.title = G.title;
+  $('kicker').textContent = G.kicker || '';
+  $('headline').innerHTML = esc(G.headline || 'Content calendar').replace(/\*([^*]+)\*/, '<span>$1</span>');
+  $('sub').textContent = G.sub || C.period || '';
+  if (G.start) $('start').innerHTML = `<span>${G.start.text}</span>${G.start.key ? `<button class="btn" onclick="openDay('${G.start.key}')">${esc(G.start.label || 'Open')}</button>` : ''}`; else $('start').remove();
+  $('calNote').innerHTML = `Built with <code>content-calendar-sms</code>. Copy by <code>post-writer-sms</code>, <code>thread-writer-sms</code>, <code>caption-writer-sms</code>; every opener picked from <code>hook-writer-sms</code> variants.${C.tz ? ' Times are ' + esc(C.tz) + '.' : ''}`;
+  const cards = (id, list) => { if (!list || !list.length) return false; $(id).innerHTML = list.map(c => `<div class="card${id === 'decisionCards' ? ' open' : ''}"><h4>${esc(c.h)}</h4>${c.html || ''}</div>`).join(''); return true; };
+  C.weeks.forEach(w => w.days.forEach(d => { d.key = d.date; if (d.also) { d.also.key = d.date + '-b'; d.also.date = d.date; d.also.dow = d.dow; } }));
+  const days = C.weeks.flatMap(w => w.days).flatMap(d => [d, d.also].filter(Boolean));
+  const prod = days.filter(d => d.copy);
+  const fmt = iso => new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const shorts = prod.filter(d => d.media.some(m => m.vertical)).length;
+  const stat = (n, l) => `<div class="stat"><b>${n}</b><small>${l}</small></div>`;
+  const nSub = prod.filter(d => P[d.pillar].side === 'subject').length, nOut = prod.length - nSub;
+  const nFlex = days.filter(d => d.flex).length;
+  const nTrend = prod.filter(d => d.trend).length;
+  $('stats').innerHTML = stat(prod.length, 'posting days') + stat(nSub, esc(SIDES.subject.toLowerCase())) + stat(nOut, esc(SIDES.around.toLowerCase())) + (shorts ? stat(shorts, 'Shorts') : '') + (nTrend ? stat(nTrend, 'trend slots') : '');
+  $('split').innerHTML = `<div style="flex:${nSub};background:var(--sub)">${esc(SIDES.subject)} · ${nSub}</div><div style="flex:${nOut};background:var(--around)">${esc(SIDES.around)} · ${nOut}</div>`;
+  const share = id => Math.round(prod.filter(d => d.pillar === id).length / (prod.length || 1) * 100) + '%';
+  $('legend').innerHTML = C.pillars.map(p => `<span><i class="dot" style="background:${pv(p.id)}"></i>${esc(p.name)} · ${p.share || share(p.id)}</span>`).join('');
+  document.querySelector('#pillars tbody').innerHTML = C.pillars.map(p => `<tr><td><i class="dot" style="background:${pv(p.id)}"></i><b>${esc(p.name)}</b></td><td>${esc(p.side === 'subject' ? SIDES.subject : SIDES.around)}</td><td>${p.share || share(p.id)}</td><td>${esc(p.angle)}</td><td>${esc(p.formats)}</td></tr>`).join('');
+  $('quote').textContent = G.quote || ''; if (!G.quote) $('quote').remove();
+  cards('strategyCards', G.strategyCards);
+  if (G.platforms && G.platforms.length) { $('platformRows').innerHTML = G.platforms.map(r => `<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.role)}</td><td>${esc(r.why)}</td><td>${esc(r.cadence)}</td></tr>`).join(''); $('platformNote').innerHTML = G.platformNote || ''; } else $('platforms').remove();
+  if ((C.trends && C.trends.length) || (G.trendCards && G.trendCards.length)) {
+    $('trendIntro').innerHTML = G.trendIntro || '';
+    $('trendRows').innerHTML = (C.trends || []).map(t => `<tr class="trendrow"><td>${fmt(t.date)}</td><td>${t.src ? `<a href="${esc(t.src)}" target="_blank" rel="noopener">${esc(t.name)}</a>` : esc(t.name)}</td><td>${esc(t.status)}</td><td>${esc(t.use)}</td></tr>`).join('');
+    cards('trendCards', G.trendCards);
+  } else $('trends').remove();
+  const promo = C.pillars.filter(p => p.promo).map(p => share(p.id));
+  const maxShare = Math.max(...C.pillars.map(p => parseInt(share(p.id))));
+  const checks = [`${SIDES.subject} ${nSub} vs ${SIDES.around.toLowerCase()} ${nOut}`, `No pillar above 40% (max ${maxShare}%)`, promo.length ? `Promotional ${promo.join(' + ')}, under 15%` : 'No promotional pillar', `Reactive slots (trend + flexible) ${Math.round((nFlex + nTrend) / ((nFlex + prod.length) || 1) * 100)}%`, 'Every caption within its platform limit'];
+  cards('batchCards', [...(G.batching || []), { h: 'Checks the plan passes', html: `<ul>${checks.map(t => `<li>✓ ${esc(t)}</li>`).join('')}</ul>` }]);
+  if (!cards('decisionCards', G.decisions)) $('decisions').remove();
+  if (!cards('madeCards', G.made)) $('made').remove();
+  if (!C.spares || !C.spares.length) $('spares').remove();
+  $('toc').innerHTML = [['calendar', 'Calendar'], ['strategy', 'Strategy'], ['platforms', 'Platforms'], ['trends', 'Trends'], ['spares', 'Spares'], ['batching', 'Batching &amp; review'], ['decisions', 'Open decisions'], ['made', 'How it was made']].filter(([id]) => $(id)).map(([id, t]) => `<a href="#${id}">${t}</a>`).join('');
+
+  const thumbOf = d => { const v = d.media.find(m => m.type === 'img'); if (v) return `<img class="thumb" src="${v.src}" alt="" loading="lazy">`; const m = d.media[0]; return m ? `<video class="thumb v" src="${m.src}#t=${m.thumb || 4}" muted preload="metadata" playsinline></video>` : ''; };
+  const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const iso = dt => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+  const full = w => { const f = new Date(w.days[0].date + 'T12:00:00'); const m = new Date(f.getTime() - ((f.getDay() + 6) % 7) * 864e5); return DOW.map((dw, i) => { const k = iso(new Date(m.getTime() + i * 864e5)); return w.days.find(d => d.date === k) || { date: k, dow: dw, none: true }; }); };
+  const tagOf = x => P[x.pillar].fiction ? ' <span class="tag">Fiction</span>' : x.trend ? ' <span class="tag">Trend</span>' : '';
+  const inner = (x, h) => `${h}<div class="p" style="color:${pv(x.pillar)}">${esc(P[x.pillar].name)}${tagOf(x)}</div><div class="t">${esc(x.title)}</div><div class="chips">${x.platforms.map(p => `<span class="chip">${esc(p)}</span>`).join('')}</div>${thumbOf(x)}`;
+  $('weeks').innerHTML = C.weeks.map(w => `<div class="week"><h3>Week ${w.n} <em>${esc(w.theme)}</em></h3><div class="grid">${full(w).map(d => {
+    const head = `<div class="d"><span>${d.dow} ${fmt(d.date)}</span></div>`;
+    if (d.none) return `<div class="day none">${head}<div class="t empty" style="font-size:12.5px">No post</div></div>`;
+    if (d.flex) return `<div class="day flex">${head}<div class="t">${esc(d.flex)}</div></div>`;
+    if (d.off) return `<div class="day off">${head}<div class="t">${esc(d.off)}</div></div>`;
+    if (d.also) return `<div class="day dual" style="--c:${pv(d.pillar)}"><button onclick="openDay('${d.key}')">${inner(d, head)}</button><button onclick="openDay('${d.also.key}')">${inner(d.also, '<div class="d"><span>Evening</span></div>')}</button></div>`;
+    return `<button class="day" style="--c:${pv(d.pillar)}" onclick="openDay('${d.key}')">${inner(d, head)}</button>`;
+  }).join('')}</div></div>`).join('');
+
+  (C.spares || []).forEach((d, i) => { d.key = 'spare-' + i; d.spare = true; days.push(d); });
+  if ($('spareList')) $('spareList').innerHTML = C.spares.map(d => `<button class="day" style="--c:${pv(d.pillar)}" onclick="openDay('${d.key}')"><div class="d"><span>Spare</span></div><div class="p">${esc(P[d.pillar].name)}${tagOf(d)}</div><div class="t">${esc(d.title)}</div>${d.hold ? '<div class="hold">On hold</div>' : ''}${thumbOf(d)}</button>`).join('');
+  const len = s => [...s].reduce((a, c) => a + (c.codePointAt(0) > 0x2000 ? 2 : 1), 0);
+  const LIMS = [['X thread', 280], ['X', 280], ['Answer', 280], ['Bluesky thread', 300], ['Bluesky', 300], ['Threads', 500], ['Mastodon', 500], ['LinkedIn', 3000], ['Instagram', 2200], ['Reels caption', 2200], ['TikTok caption', 2200], ['Shorts caption', 150], ['YouTube', 100], ['Pinterest', 500], ['Alt text', 1000]].sort((a, b) => b[0].length - a[0].length);
+  const LIM = k => (LIMS.find(([p]) => k.startsWith(p)) || [0, 0])[1];
+  const posts = (k, t) => k.startsWith('X thread') ? t.split(/\n\n(?=\d+\/ )/) : k.startsWith('Bluesky thread') ? t.split('\n\n—\n\n') : null;
+  let copyId = 0; const store = {};
+  const copyBtn = t => { const id = 'c' + (copyId++); store[id] = t; return `<button class="copy" data-id="${id}">Copy</button>`; };
+  function fallbackCopy(text) { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; (dlg.open ? dlg : document.body).appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); return ok; }
+  document.addEventListener('click', e => { const b = e.target.closest('.copy'); if (!b) return; const text = store[b.dataset.id]; const done = ok => { b.textContent = ok ? 'Copied' : 'Select manually'; if (ok) b.classList.add('ok'); setTimeout(() => { b.textContent = 'Copy'; b.classList.remove('ok'); }, 1400); }; const p = navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(text).then(() => true, () => fallbackCopy(text)) : Promise.resolve(fallbackCopy(text)); p.then(done); });
+  const dlg = $('dlg');
+  function openDay(key) {
+    const d = days.find(x => x.key === key);
+    if (!d || !d.copy) return;
+    $('dlgMeta').textContent = d.spare ? `Spare · ${d.format}` : `${d.dow} ${fmt(d.date)} · ${d.time} · ${d.format}`;
+    const holdNote = d.hold ? `<div class="cp" style="border-color:var(--warn)"><header><h5 style="color:var(--warn)">On hold</h5></header><pre>${esc(d.hold)}</pre></div>` : '';
+    $('dlgTitle').innerHTML = `<i class="dot" style="background:${pv(d.pillar)}"></i>${esc(d.title)}`;
+    $('dlgChips').innerHTML = `<span class="chip" style="color:${pv(d.pillar)};border-color:${pv(d.pillar)}">${esc(P[d.pillar].name)}</span>` + (P[d.pillar].fiction ? '<span class="chip">Fiction</span>' : '') + d.platforms.map(p => `<span class="chip">${esc(p)}</span>`).join('');
+    $('dlgMedia').innerHTML = d.media.map(m => `<figure>${m.type === 'img' ? `<img src="${m.src}" alt="${esc(m.cap)}">` : `<video class="${m.vertical ? 'vert' : ''}" src="${m.src}" controls playsinline preload="metadata"></video>`}<figcaption><span>${esc(m.cap)}</span><a href="${m.src}" download>Download</a></figcaption></figure>`).join('');
+    const h = d.hooks;
+    let html = h ? `<div class="hk"><h5>Hook variants · ${esc(h.platform)} · hook-writer-sms</h5><ol>${h.list.map(([pat, t], i) => `<li class="${i === h.pick ? 'pick' : ''}"><b>${esc(pat)}:</b> ${esc(t)}</li>`).join('')}</ol><div class="why">★ Picked: ${esc(h.why)}</div></div>` : '';
+    html += d.copy.map(({ k, t }) => {
+      const ps = posts(k, t), lim = LIM(k);
+      const body = ps ? ps.map(p => `<div class="post"><pre>${esc(p)}</pre><div class="n2">${len(p)}/${lim} ${copyBtn(p)}</div></div>`).join('') : `<pre>${esc(t)}</pre>`;
+      return `<div class="cp"><header><h5>${esc(k)}</h5><span class="n">${ps ? ps.length + ' posts' : lim ? len(t) + '/' + lim : len(t) + ' chars'}</span>${copyBtn(t)}</header>${body}</div>`;
+    }).join('');
+    $('dlgText').innerHTML = holdNote + html;
+    dlg.showModal();
+    dlg.scrollTop = 0;
+  }
+  const hm = location.hash.match(/day-(\d{4}-\d{2}-\d{2}(?:-b)?)/);
+  if (hm) openDay(hm[1]);
+  dlg.addEventListener('close', () => dlg.querySelectorAll('video').forEach(v => v.pause()));
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+</script>
+</body>
+</html>
